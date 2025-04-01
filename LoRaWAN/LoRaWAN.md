@@ -1,1 +1,3 @@
-## [[LoRaWAN | https://fr.wikipedia.org/wiki/LoRaWAN]]
+## LoRaWAN
+
+Fonctionnement + Présentation : https://fr.wikipedia.org/wiki/LoRaWAN
