@@ -5,6 +5,7 @@
 ## Ressources
 
 Fonctionnement + Présentation : https://fr.wikipedia.org/wiki/LoRaWAN  
+Référence :   
 Documentation ? : https://docs.pycom.io/firmwareapi/pycom/network/lora/
 
 ---
