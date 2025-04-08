@@ -86,12 +86,12 @@ def on_forever():
     temp = get_state(AnalogPin.P0)
     hum = get_state(AnalogPin.P1) # ----------------------------------Mettre nom du pin
     if saison == "automne" or saison == "hiver":
-        if temp <= 0: # Modifier valeur
+        if temp <= 35: # Modifier valeur
             envoyer_message()
         if hum >= 65:
             envoyer_message()
     else:
-        if temp <= 0: # Modifier valeur
+        if temp <= 38: # Modifier valeur
             envoyer_message()
         if hum >= 80:
             envoyer_message()
