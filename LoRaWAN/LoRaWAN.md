@@ -5,7 +5,7 @@
 ## Ressources
 
 Fonctionnement + Présentation : https://fr.wikipedia.org/wiki/LoRaWAN  
-Référence :   
+Référence : https://wiki.seeedstudio.com/Grove_LoRa_E5_New_Version/  
 Documentation ? : https://docs.pycom.io/firmwareapi/pycom/network/lora/
 
 ---
