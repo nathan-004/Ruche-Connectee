@@ -1,168 +1,239 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-void main() {
-  runApp(const BeehiveApp());
-}
+void main() => runApp(MyApp());
 
-class BeehiveApp extends StatelessWidget {
-  const BeehiveApp({super.key});
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Smart Beehive Monitor',
+      title: 'Ruche Connectée',
       theme: ThemeData(
         primarySwatch: Colors.amber,
+        scaffoldBackgroundColor: Colors.yellow[50],
       ),
-      home: const HomeScreen(),
-      debugShowCheckedModeBanner: false,
+      home: BeehiveHomePage(),
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class BeehiveHomePage extends StatefulWidget {
+  @override
+  _BeehiveHomePageState createState() => _BeehiveHomePageState();
+}
+
+class _BeehiveHomePageState extends State<BeehiveHomePage> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    OverviewPage(),
+    GraphsPage(),
+    SettingsPage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3CD),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Banner
-            Container(
-              height: 100,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.amber,
-                image: DecorationImage(
-                  image: AssetImage('assets/beehive_banner.jpg'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: const Center(
-                child: Text(
-                  'My Smart Beehive',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
+      appBar: AppBar(
+        title: Text('Ruche Connectée'),
+      ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: Colors.amber[800],
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: "Vue d'ensemble",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.show_chart),
+            label: 'Graphiques',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Paramètres',
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-            const SizedBox(height: 20),
-
-            // Line chart for weight (placeholder data)
-            SizedBox(
-              height: 200,
-              width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: LineChart(
-                  LineChartData(
-                    titlesData: FlTitlesData(show: false),
-                    borderData: FlBorderData(show: false),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: [
-                          FlSpot(0, 10),
-                          FlSpot(1, 15),
-                          FlSpot(2, 13),
-                          FlSpot(3, 17),
-                          FlSpot(4, 19),
-                          FlSpot(5, 18),
-                        ],
-                        isCurved: true,
-                        color: Colors.brown,
-                        barWidth: 4,
-                        dotData: FlDotData(show: false),
-                      )
-                    ],
-                  ),
-                ),
+class OverviewPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            height: 150,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/beehive_banner.jpg"),
+                fit: BoxFit.cover,
               ),
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                MetricCard(label: 'Température', value: '35°C'),
+                MetricCard(label: 'Humidité', value: '60%'),
+                MetricCard(label: 'Poids', value: '2.5kg'),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: WeatherWidget(),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-            const SizedBox(height: 20),
+class GraphsPage extends StatelessWidget {
+  final List<FlSpot> weightData = List.generate(
+      10, (index) => FlSpot(index.toDouble(), (2 + index * 0.1)));
+  final List<FlSpot> temperatureData = List.generate(
+      10, (index) => FlSpot(index.toDouble(), (30 + index).toDouble()));
+  final List<FlSpot> humidityData = List.generate(
+      10, (index) => FlSpot(index.toDouble(), (50 + index).toDouble()));
 
-            // Temperature and Humidity Buttons
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                      ),
-                      onPressed: () {},
-                      child: const Text(
-                        '25°C',
-                        style: TextStyle(fontSize: 24),
-                      ),
-                    ),
+  Widget buildGraph(String title, List<FlSpot> data) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightBlueAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                      ),
-                      onPressed: () {},
-                      child: const Text(
-                        '65%',
-                        style: TextStyle(fontSize: 24),
-                      ),
-                    ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true),
                   ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    isCurved: true,
+                    spots: data,
+                    barWidth: 3,
+                    color: Colors.amber,
+                    belowBarData: BarAreaData(show: false),
+                  )
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            const SizedBox(height: 20),
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        buildGraph("Poids de la ruche", weightData),
+        buildGraph("Température", temperatureData),
+        buildGraph("Humidité", humidityData),
+      ],
+    );
+  }
+}
 
-            // Weather Widget (Placeholder)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Icon(Icons.wb_sunny, size: 40, color: Colors.orange),
-                    Text(
-                      'Sunny - 21°C',
-                      style: TextStyle(fontSize: 20),
-                    ),
-                    Text(
-                      'Poitiers',
-                      style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+class SettingsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
+        ListTile(
+          title: Text("Intervalle d'envoi de données"),
+          subtitle: Text("30 minutes"),
+          trailing: Icon(Icons.edit),
         ),
+        Divider(),
+        ListTile(
+          title: Text("Localisation de la ruche"),
+          subtitle: Text("Jardin arrière - Latitude: 46.5, Longitude: 0.3"),
+          trailing: Icon(Icons.location_on),
+        ),
+        Divider(),
+        ListTile(
+          title: Text("Seuils d'alerte"),
+          subtitle: Text("Température > 40°C, Humidité < 40%"),
+          trailing: Icon(Icons.warning),
+        ),
+      ],
+    );
+  }
+}
+
+class MetricCard extends StatelessWidget {
+  final String label;
+  final String value;
+
+  MetricCard({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+}
+
+class WeatherWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.amber[100],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Icon(Icons.wb_sunny, size: 40, color: Colors.orange),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Soleil", style: TextStyle(fontSize: 18)),
+              Text("25°C, Vent léger", style: TextStyle(fontSize: 14)),
+            ],
+          )
+        ],
       ),
     );
   }
