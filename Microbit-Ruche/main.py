@@ -17,8 +17,26 @@ def round(n):
 
     return int(N[:N1.index_of(".")])
 
-def enumerate(iterable):
-    return [(i, iterable[i]) for i in range(len(iterable))]
+def len(iterable):
+    i = 0
+
+    for el in iterable:
+        i+=1
+    
+    return i
+
+dernier_temps = 0
+compteur_overflow = 0
+
+def get_running_time_total(): # Prévient l'overflow après environ 24 jours
+    global dernier_temps, compteur_overflow
+    actuel = input.running_time()
+    if actuel < dernier_temps:
+        # Overflow détecté
+        compteur_overflow += 1
+    dernier_temps = actuel
+    # Chaque overflow ajoute 2**31 ms (~24 jours)
+    return compteur_overflow * (2**31) + actuel
 
 def get_state(pin: number):
     # Humidite + température
@@ -35,7 +53,7 @@ def convert(t, cur, res): # indexs
     return round(t)
 
 def get_date():
-    ms = input.running_time() # Nombre de ms depuis le lancement du programme
+    ms = get_running_time_total() # Nombre de ms depuis le lancement du programme
     date = []
 
     j = 0
@@ -48,8 +66,8 @@ def get_date():
     max_ = [1000, 60, 60, 24, 30, 12]
     new_date = []
 
-    for t in enumerate(date):
-        idx, val = t
+    for t in range(len(date)):
+        idx, val = t, date[t]
         res = val + first_date[idx]
         if res > max_[idx]:
             res %= max_[idx]
@@ -95,5 +113,7 @@ def on_forever():
             envoyer_message()
         if hum >= 80:
             envoyer_message()
+
+    basic.pause(1000)
 
 basic.forever(on_forever)
