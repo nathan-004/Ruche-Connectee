@@ -1,3 +1,5 @@
+import JSON
+
 def list(iterable):
     t = []
     
@@ -38,47 +40,67 @@ def get_running_time_total(): # Prévient l'overflow après environ 24 jours
     # Chaque overflow ajoute 2**31 ms (~24 jours)
     return compteur_overflow * (2**31) + actuel
 
-def get_state(pin: number):
-    # Humidite + température
-    return pins.analog_read_pin(pin)
+def sht31_init():
+    # Commande de mesure haute précision sans étirement d'horloge : 0x2C 0x06
+    buf = bytearray(2)
+    buf[0] = 0x2C
+    buf[1] = 0x06
+    pins.i2c_write_buffer(0x44, buf)
 
-def convert(t, cur, res): # indexs
-    calc = [1000, 60, 60, 24, 30] # ms -> s -> m -> h -> j
-    if cur > res:
-        for i in range(cur-1, res-1, -1):
-            t *= calc[i]
-    elif cur < res:
-        for i in range(cur, res, 1):
-            t /= calc[i]
-    return round(t)
+def get_temp():
+    sht31_init()
+    basic.pause(50)
+    data = pins.i2c_read_buffer(0x44, 6)
+    raw_temp = (data[0] << 8) | data[1]
+    temp_c = -45 + (175 * raw_temp / 65535)
+    return temp_c
+
+def get_hum():
+    sht31_init()
+    basic.pause(50)
+    data = pins.i2c_read_buffer(0x44, 6)
+    raw_hum = (data[3] << 8) | data[4]
+    humidity = 100 * raw_hum / 65535
+    return humidity
 
 def get_date():
-    ms = get_running_time_total() # Nombre de ms depuis le lancement du programme
-    date = []
+    ms = get_running_time_total()
 
-    j = 0
-    for i in range(4, -1, -1):
-        date.append(convert(ms, 0, i))
-        ms -= convert(date[j], i, 0)
-        j+=1
+    s = ms // 1000
+    m = s // 60
+    h = m // 60
+    d = h // 24
 
-    # Addition de first_date et de date
-    max_ = [1000, 60, 60, 24, 30, 12]
-    new_date = []
+    sec = s % 60
+    min_ = m % 60
+    hr = h % 24
+    day = (first_date[1] + (d % 30)) % 30
+    month = (first_date[0] + (d // 30)) % 12
 
-    for t in range(len(date)):
-        idx, val = t, date[t]
-        res = val + first_date[idx]
-        if res > max_[idx]:
-            res %= max_[idx]
-        new_date.append(res)
+    
+    new_date = [month if month != 0 else 12,
+        day if day != 0 else 1,
+        hr,
+        min_,
+        sec
+    ]
 
     if new_date[0] != first_date[0]:
-        saison = saisons[date[0] - 1]
+        saison = saisons[new_date[0] - 1]
 
     return new_date
 
-def envoyer_message(): # Envoyer signal avec le réseau LoRaWAN
+def envoyer_message(donnees, mode = 0): # Envoyer signal avec le réseau LoRaWAN
+    """
+    Parameters
+    ----------
+    donnee:str
+        Donnee à envoyer
+    mode:int
+        0 -> Envoi de données normales 
+        1 -> Alerte 
+        2 -> Autre 
+    """
     pass
 
 first_date = [4, 5, 9, 16, 0] # m, j, h, m, s
@@ -98,21 +120,27 @@ saisons = ("hiver",
 )
 saison = saisons[first_date[0] - 1]
 
+MIN_HUM_hiver = 65
+MIN_TEMP_hiver = 35
+
+MIN_HUM_ete = 80
+MIN_TEMP_ete = 38
+
 def on_forever():
     date = get_date()
-    serial.write_numbers(date)
-    temp = get_state(AnalogPin.P0)
-    hum = get_state(AnalogPin.P1) # ----------------------------------Mettre nom du pin
+    serial.write_numbers(date) # Affiche la date sur l'ordinateur
+    temp = get_temp()
+    hum = get_hum() # ----------------------------------Mettre nom du pin
     if saison == "automne" or saison == "hiver":
-        if temp <= 35: # Modifier valeur
-            envoyer_message()
-        if hum >= 65:
-            envoyer_message()
+        if temp <= MIN_TEMP_hiver: # Modifier valeur
+            envoyer_message("")
+        if hum >= MIN_HUM_hiver:
+            envoyer_message("")
     else:
-        if temp <= 38: # Modifier valeur
-            envoyer_message()
+        if temp <= MIN_TEMP_ete: # Modifier valeur
+            envoyer_message("")
         if hum >= 80:
-            envoyer_message()
+            envoyer_message("")
 
     basic.pause(1000)
 
