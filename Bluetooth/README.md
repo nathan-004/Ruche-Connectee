@@ -5,3 +5,5 @@ La connection Bluetooth va être utilisé dans le projet pour transmettre des do
 - La date
 - L'intervalle d'envoi des données
 - ...
+
+Lien de l'application : https://drive.google.com/drive/folders/1Ts5IDIu7OXL2mTPUTV6c8x1OsCRdnaD_?usp=drive_link
