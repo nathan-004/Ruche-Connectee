@@ -6,3 +6,8 @@ Vidéo comprenant des bruits de frelon et d'abeilles.
 3. Traitement de signal en python : https://www.f-legrand.fr/scidoc/docmml/sciphys/caneurosmart/pysignal/pysignal.html
 4. Filtrage numérique : https://www.f-legrand.fr/scidoc/docmml/numerique/filtre/introfiltres/introfiltres.html
 5. https://forum.arduino.cc/t/conseil-identifier-le-vol-d-un-frelon-a-l-aide-d-un-micro/556800
+
+## Micropython
+
+1. https://github.com/richardghirst/microfft
+2. https://github.com/micropython/micropython-lib/tree/master/fft
