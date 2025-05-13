@@ -13,7 +13,7 @@ serial.redirect(SerialPin.P0, SerialPin.P1, 9600)
 def send_at(cmd):
     serial.write_string(cmd + "\r\n")
     basic.pause(2000)
-    resp = serial.read()
+    resp = serial.read_line()
     if resp:
         basic.show_string("R")   # Réponse reçue
     else:
