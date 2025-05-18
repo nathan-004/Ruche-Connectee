@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:open_meteo/open_meteo.dart';
 
 void main() => runApp(MyApp());
 
@@ -50,8 +51,8 @@ class _BeehiveHomePageState extends State<BeehiveHomePage> {
         selectedItemColor: Colors.amber[800],
         items: const [
           BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Vue d'ensemble",
+            icon: Icon(Icons.home),
+            label: "Vue d'ensemble",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.show_chart),
@@ -96,7 +97,7 @@ class OverviewPage extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: WeatherWidget(),
+            child: WeatherWidget(latitude: 48.8566, longitude: 2.3522),
           ),
         ],
       ),
@@ -212,29 +213,109 @@ class MetricCard extends StatelessWidget {
     );
   }
 }
+class WeatherWidget extends StatefulWidget {
+  final double latitude;
+  final double longitude;
 
-class WeatherWidget extends StatelessWidget {
+  const WeatherWidget({
+    super.key,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  @override
+  State<WeatherWidget> createState() => _WeatherWidgetState();
+}
+
+class _WeatherWidgetState extends State<WeatherWidget> {
+  late final Future<ApiResponse<WeatherApi>> _weatherFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Préparer la requête : on demande 3 variables horaires
+    _weatherFuture = WeatherApi(temperatureUnit: TemperatureUnit.celsius, precipitationUnit: PrecipitationUnit.mm, windspeedUnit: WindspeedUnit.kmh).request(
+      latitude: widget.latitude,
+      longitude: widget.longitude,
+
+      // On récupère les séries horaires suivantes
+      hourly: {
+        WeatherHourly.temperature_2m,     // Température en °C
+        WeatherHourly.precipitation,     // Précipitations en mm
+        WeatherHourly.wind_speed_10m,     // Vent à 10 m en km/h
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.amber[100],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Icon(Icons.wb_sunny, size: 40, color: Colors.orange),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return FutureBuilder<ApiResponse<WeatherApi>>(
+      future: _weatherFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          // En cours de chargement
+          print("Still loading… state = ${snapshot.connectionState}");
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          // En cas d’erreur
+          print("Error: ${snapshot.error}");
+          return const Center(child: Text("Impossible de charger la météo"));
+        }
+
+        final response = snapshot.data!;
+        final hourly = response.hourlyData;
+        // ignore: avoid_print
+        print(hourly.toString());
+
+        // On prend la première valeur de chaque série horaire
+        final tempsList = hourly[WeatherHourly.temperature_2m]!;
+        final precsList = hourly[WeatherHourly.precipitation]!;
+        final windList = hourly[WeatherHourly.wind_speed_10m]!;
+
+        final tempsValues = tempsList.values.entries.map((e) => e.value).toList();
+        final num temp = tempsValues.isNotEmpty ? tempsValues[0] : 0.0;
+
+        final precipValues = precsList.values.entries.map((e) => e.value).toList();
+        final num precip = precipValues.isNotEmpty ? precipValues[0] : 0.0;
+
+        final windValues = windList.values.entries.map((e) => e.value).toList();
+        final num wind = windValues.isNotEmpty ? windValues[0] : 0.0;
+
+        final bool isRaining = precip > 0.0;
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.amber[100],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Text("Soleil", style: TextStyle(fontSize: 18)),
-              Text("25°C, Vent léger", style: TextStyle(fontSize: 14)),
+              Icon(
+                isRaining ? Icons.cloud : Icons.wb_sunny,
+                size: 40,
+                color: isRaining ? Colors.blue : Colors.orange,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isRaining ? "Pluie" : "Ensoleillé",
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  Text(
+                    "${temp.toStringAsFixed(1)}°C, Vent ${wind.toStringAsFixed(0)} km/h",
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
             ],
-          )
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 }
