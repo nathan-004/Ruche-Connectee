@@ -9,3 +9,7 @@ Application réalisée avec Flutter.
 ![Capture d'écran 2025-04-19 144151](https://github.com/user-attachments/assets/a49282d2-e52f-4b57-a0ea-23f7dbf5e8fb)  
 
 Lien vers l'application : https://drive.google.com/drive/folders/1Ts5IDIu7OXL2mTPUTV6c8x1OsCRdnaD_?usp=sharing
+
+## Ressources
+
+- [API Open-Meteo](https://github.com/neursh/open-meteo-dart?tab=readme-ov-file#usage--docs)
