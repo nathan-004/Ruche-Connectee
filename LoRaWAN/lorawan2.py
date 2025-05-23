@@ -1,6 +1,6 @@
 from microbit import *
 
-uart.init(115200, tx=pin0, rx=pin14)
+uart.init(baudrate=9600, bits=8, parity=None, stop=1, tx=pin0, rx=pin14)
 
 uart.write('AT\r\n')
 response = "test"
