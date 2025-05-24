@@ -1,101 +1,43 @@
 from microbit import *
 
-# Constantes
-END = "\r\n"
+class LoRaWan():
 
-def send_command(cmd):
-    # Vider le buffer de réception avant d'envoyer
-    while uart.any():
-        uart.read()
-    
-    # Envoyer la commande
-    full_cmd = cmd + END
-    uart.write(full_cmd)
-    display.show("S")  # Indicateur d'envoi
-    
-    # Attendre et lire la réponse
-    response = check_response()
-    return response
+    DEFAULT_TRANSMITTER = pin14
+    DEFAULT_RECEIVER = pin0
+    DEFAULT_BAUDRATE = 9600
+    END = "\r\n"
 
-def check_response():
-    response_bytes = b''
-    timeout_count = 0
-    max_timeout = 50  # 5 secondes (50 * 100ms)
-    
-    while timeout_count < max_timeout:
-        if uart.any():
-            # Lire les données disponibles
-            new_data = uart.read()
-            if new_data:
-                response_bytes += new_data
-                timeout_count = 0  # Reset timeout si on reçoit des données
-                
-                # Vérifier si on a une réponse complète (se termine par \r\n)
-                if b'\r\n' in response_bytes:
-                    break
-        else:
-            sleep(100)  # 100ms
-            timeout_count += 1
-    
-    # Convertir en string et nettoyer
-    if response_bytes:
-        try:
-            response_string = response_bytes.decode('utf-8').strip()
-            return response_string
-        except:
-            # Si le décodage échoue, retourner les bytes bruts
-            return str(response_bytes)
-    else:
-        return None
+    def __init__(self, baudrate:int = 9600, tx=None, rx=None):
+        if tx is None:
+            tx = self.DEFAULT_TRANSMITTER
+        elif rx is None:
+            rx = self.DEFAULT_RECEIVER
 
-def init():
-    # Configuration UART pour LoRaWAN - syntaxe micro:bit v1
-    uart.init(9600, tx=pin14, rx=pin0)
-    
-    # Attendre un peu pour que l'UART se stabilise
-    sleep(1000)
-    
-    display.show("I")  # Indicateur d'initialisation
-    
-    # Test de communication
-    response = send_command("AT")
-    
-    # Réinitialiser l'UART pour l'affichage série
-    sleep(500)
-    uart.init(115200)
-    
-    if response:
-        uart.write("Reponse: " + str(response) + "\n")
-        display.show("O")  # OK
-    else:
-        uart.write("Aucune reponse recue\n")
-        display.show("E")  # Erreur
+        self.tx = tx
+        self.rx = rx
+        self.baudrate = baudrate
 
-# Test avec plusieurs commandes
-def test_lorawan():
-    uart.init(9600, tx=pin14, rx=pin0)
-    sleep(1000)
-    
-    commands = ["AT", "AT+VER", "AT+ID"]
-    
-    for i in range(len(commands)):
-        cmd = commands[i]
-        display.show(str(i))
-        response = send_command(cmd)
-        
-        # Affichage sur série
-        uart.init(115200)
-        if response:
-            uart.write(cmd + " -> " + str(response) + "\n")
-        else:
-            uart.write(cmd + " -> Pas de reponse\n")
-        
-        # Retour en mode LoRaWAN
-        uart.init(9600, tx=pin14, rx=pin0)
-        sleep(500)
+        uart.init(baudrate=baudrate, tx=tx, rx=rx)
 
-# Lancement
-init()
+    def send_command(self, cmd:str):
+        new_cmd = cmd + self.END
+        uart.write(new_cmd)
+        response = self.check_response()
+        return response
 
-# Décommenter pour tester plusieurs commandes
-# test_lorawan()
+    def check_response(self, timeout:int=5000):
+        t = round(timeout / 100)
+        val = "Pas de réponse"
+        for i in range(100):
+            if uart.any():
+                val = uart.read()
+                break
+            sleep(t)
+        return val
+
+lora = LoRaWan()
+val = lora.send_command("AT")
+
+uart.init(115200)
+uart.write(str(val) + "\n")
+display.scroll(str(val))
