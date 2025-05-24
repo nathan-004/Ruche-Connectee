@@ -16,6 +16,7 @@ AT Commandes : https://github.com/beegee-tokyo/RAK4631-Quick-Start-Examples/blob
 
 Python sur Raberry Pi : https://github.com/Love4yzp/LoRaCAP  
 Python Microbit : https://github.com/ribbotson/LoRaWAN_MicroBit/tree/master  
+Exemple Makecode : https://www.hackster.io/idreams/lora-weather-station-with-bbc-micro-bit-3f14f8  
 
 ## Protocole LoRaWAN
 
