@@ -2,30 +2,50 @@ import JSON
 
 def list(iterable):
     t = []
-    
     for el in iterable:
         t.append(el)
-
     return t
 
 def round(n):
     # Round to the lowest integer
-
     N = str(n)
     N1 = list(N)
-
     if "." not in N1:
         return n
-
     return int(N[:N1.index_of(".")])
 
 def len(iterable):
     i = 0
-
     for el in iterable:
         i+=1
-    
     return i
+
+def modify_parameters():
+    global message
+
+    # Message sous forme de JSON {"Intervalle": temps en min, "Seuil de temp": température, "Seuil de hum": humidité, "Current time": temps sous forme [mois, jour, heure, minute, secondes]}
+    dictionnaire = JSON.parse(message)
+
+    
+
+message = ""
+
+def on_bluetooth_connected():
+    bluetooth.start_uart_service()
+    basic.show_string("C")
+bluetooth.on_bluetooth_connected(on_bluetooth_connected)
+
+def on_bluetooth_disconnected():
+    basic.show_string("D")
+bluetooth.on_bluetooth_disconnected(on_bluetooth_disconnected)
+
+def on_uart_data_received():
+    global message
+    message = bluetooth.uart_read_until(serial.delimiters(Delimiters.HASH))
+    bluetooth.uart_write_string(message)
+    basic.show_string(message)
+    modify_parameters()
+bluetooth.on_uart_data_received(serial.delimiters(Delimiters.HASH), on_uart_data_received)
 
 dernier_temps = 0
 compteur_overflow = 0
@@ -77,7 +97,6 @@ def get_date():
     day = (first_date[1] + (d % 30)) % 30
     month = (first_date[0] + (d // 30)) % 12
 
-    
     new_date = [month if month != 0 else 12,
         day if day != 0 else 1,
         hr,
@@ -97,9 +116,9 @@ def envoyer_message(donnees, mode = 0): # Envoyer signal avec le réseau LoRaWAN
     donnee:str
         Donnee à envoyer
     mode:int
-        0 -> Envoi de données normales 
-        1 -> Alerte 
-        2 -> Autre 
+        0 -> Envoi de données normales
+        1 -> Alerte
+        2 -> Autre
     """
     pass
 
