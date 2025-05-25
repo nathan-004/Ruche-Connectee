@@ -20,13 +20,30 @@ def len(iterable):
         i+=1
     return i
 
+def copy(iterable:list):
+    t = []
+    for el in iterable:
+        t.append(el)
+    return t 
+
 def modify_parameters():
     global message
+    global MIN_HUM_hiver
+    global MIN_TEMP_hiver
+    global MIN_HUM_ete
+    global MIN_TEMP_ete
+    global INTERVALLE_ENVOI
 
-    # Message sous forme de JSON {"Intervalle": temps en min, "Seuil de temp": température, "Seuil de hum": humidité, "Current time": temps sous forme [mois, jour, heure, minute, secondes]}
+    # Message sous forme de JSON {"Intervalle": temps en min, "Seuil Température": température, "Seuil Humidite": humidité, "Current time": temps sous forme [mois, jour, heure, minute, secondes]}
     dictionnaire = JSON.parse(message)
 
-    
+    # Pas de gestion des saisons pour le moment
+    MIN_HUM_hiver = dictionnaire["Seuil Humidite"]
+    MIN_HUM_ete = dictionnaire["Seuil Température"]
+    MIN_TEMP_ete = dictionnaire["Seuil Température"]
+    MIN_TEMP_hiver = dictionnaire["Seuil Température"]
+
+    INTERVALLE_ENVOI = dictionnaire["Intervalle"]
 
 message = ""
 
@@ -145,22 +162,29 @@ MIN_TEMP_hiver = 35
 MIN_HUM_ete = 80
 MIN_TEMP_ete = 38
 
+INTERVALLE_ENVOI = 15 # Temps en minutes
+
+last_message = copy(first_date)
+
 def on_forever():
     date = get_date()
     serial.write_numbers(date) # Affiche la date sur l'ordinateur
     temp = get_temp()
-    hum = get_hum() # ----------------------------------Mettre nom du pin
+    hum = get_hum()
     if saison == "automne" or saison == "hiver":
         if temp <= MIN_TEMP_hiver: # Modifier valeur
-            envoyer_message("")
+            envoyer_message("", 1)
         if hum >= MIN_HUM_hiver:
-            envoyer_message("")
+            envoyer_message("", 1)
     else:
         if temp <= MIN_TEMP_ete: # Modifier valeur
-            envoyer_message("")
-        if hum >= 80:
-            envoyer_message("")
+            envoyer_message("", 1)
+        if hum >= MIN_HUM_ete:
+            envoyer_message("", 1)
 
+    if date[3] - last_message[3] > INTERVALLE_ENVOI:
+        envoyer_message("")
+        last_message = copy(date)
     basic.pause(1000)
 
 basic.forever(on_forever)
