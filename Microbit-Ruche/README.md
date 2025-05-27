@@ -3,7 +3,7 @@
 - Editeur Microsoft : https://makecode.microbit.org/#editor -> main.py  
 - Editeur Python : https://python.microbit.org/v/3/ -> main2.py  
 - Editeur Autre : https://codewith.mu/en/tutorials/1.0/microbit
-
+- Capteur de charge : https://www.gotronic.fr/art-capteur-de-force-50-kg-czl635-50-17601.htm?srsltid=AfmBOop3KbDSoXNKJc0B-U7yaRQ_rRK0Y_GwZm4GmZoGeOr7UxuggluV
 ```
 def list(iterable):
     t = []
