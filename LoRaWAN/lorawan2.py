@@ -29,14 +29,14 @@ class LoRaWan():
         self.baudrate = baudrate
 
         uart.init(baudrate=baudrate, tx=tx, rx=rx)
-
+        
     def send_command(self, cmd:str, timeout = None):
         if timeout is None:
             timeout = self.DEFAULT_TIMEOUT
         new_cmd = cmd + self.END
         uart.write(new_cmd)
         response = self.check_response(timeout)
-        return response
+        return str(response)
 
     def check_response(self, timeout:int=5000):
         t = round(timeout / 100)
@@ -47,6 +47,21 @@ class LoRaWan():
                 break
             sleep(t)
         return val
+
+    def display_result(self, string:str):
+        """Affiche une chaîne de charactères via UART"""
+        uart.init(BaudRate.BAUD_RATE115200)
+        uart.write(string + "\n")
+        uart.init(self.baudrate, tx=self.tx, rx=self.rx)
+        
+    def show_IDs(self, timeout = None):
+        """Envoie une commande AT pour montrer les IDENTIFIANTS de l'appareil"""
+        if timeout is None:
+            timeout = self.DEFAULT_TIMEOUT
+        dev_eui = self.send_command("AT+ID=DevEui", timeout)
+        app_eui = self.send_command("AT+ID=AppEui", timeout)
+        self.display_result(dev_eui)
+        self.display_result(app_eui)
 
 lora = LoRaWan(baudrate=BaudRate.BAUD_RATE115200)
 val = lora.send_command("AT", timeout=10000)
