@@ -63,8 +63,17 @@ class LoRaWan():
         self.display_result(dev_eui)
         self.display_result(app_eui)
 
+    def wake_up(self):
+        """Set the Low Power mode to  AUTOOFF"""
+        wakeup = bytes([0xFF, 0xFF, 0xFF, 0xFF])
+        cmd = b"AT+LOWPOWER=AUTOOFF\r\n"
+
+        uart.write(wakeup + cmd)
+
+        return self.check_response()
+
 lora = LoRaWan(baudrate=BaudRate.BAUD_RATE115200)
-val = lora.send_command("AT", timeout=10000)
+val = lora.wake_up()
 
 uart.init(115200)
 uart.write(str(val) + "\n")
